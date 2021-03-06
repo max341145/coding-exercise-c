@@ -2,6 +2,7 @@ package scoring.services;
 
 import com.j256.ormlite.dao.Dao;
 import org.apache.commons.lang3.Validate;
+import org.jetbrains.annotations.Nullable;
 import scoring.DatabaseManager;
 import scoring.algorithms.DefaultScoringAlgorithm;
 import scoring.algorithms.ScoringAlgorithm;
@@ -30,6 +31,26 @@ public final class CreditScoreService {
         creditScoreDao = DatabaseManager.getInstance().getCreditScoreDao();
     }
 
+    /**
+     * Finds credit score by customer id.
+     */
+    @Nullable
+    public CreditScore findCreditScoreById(int customerId) {
+        try {
+            return creditScoreDao.queryForId(customerId);
+        } catch (SQLException ex) {
+            throw new IllegalStateException(ex);
+        }
+    }
+
+    /**
+     * Finds customer's credit score. If {@code allowStaleData} set to {@code false} checks that
+     * all parameters involved into scoring calculation is still relevant.
+     *
+     * @param allowStaleData if {@code false} then not up-to-date scoring can be returned.
+     * @return Customer's scoring value.
+     */
+    @Nullable
     public CreditScore findCustomerCreditScore(Customer customer, boolean allowStaleData) {
         Validate.notNull(customer);
 
@@ -77,16 +98,22 @@ public final class CreditScoreService {
         return creditScoreEntity;
     }
 
+    /**
+     * Finds customer entity by it's first name, last name and date of birth.
+     *
+     * @return Found {@link Customer} or null otherwise.
+     */
+    @Nullable
     private Customer findPersistedCustomer(Customer customer) throws SQLException {
         var findCustomerQuery = customerDao.queryBuilder().limit(1L)
                 .where()
-                .eq("firstName", customer.getFirstName()).and()
-                .eq("lastName", customer.getLastName()).and()
-                .eq("dateOfBirth", customer.getDateOfBirth())
+                .eq("firstName", customer.getFirstName())
+                .and().eq("lastName", customer.getLastName())
+                .and().eq("dateOfBirth", customer.getDateOfBirth())
                 .prepare();
-        var result = customerDao.query(findCustomerQuery);
+        var queryResult = customerDao.query(findCustomerQuery);
 
-        return result == null || result.isEmpty() ? null : result.get(0);
+        return queryResult == null || queryResult.isEmpty() ? null : queryResult.get(0);
     }
 
     public void setScoringAlgorithm(ScoringAlgorithm scoringAlgorithm) {

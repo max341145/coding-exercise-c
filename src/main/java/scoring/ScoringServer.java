@@ -2,20 +2,21 @@ package scoring;
 
 import fi.iki.elonen.NanoHTTPD;
 import fi.iki.elonen.router.RouterNanoHTTPD;
-import org.apache.commons.lang3.concurrent.ConcurrentInitializer;
-import org.apache.commons.lang3.concurrent.LazyInitializer;
 import scoring.handlers.CreditScoreHandler;
+import scoring.handlers.ScoringValueHandler;
 
 import java.io.IOException;
 
 public class ScoringServer {
 
     public static final String END_POINT_PATH_SCORE = "/api/score";
+    public static final String END_POINT_PATH_SCORE_BY_ID = "/api/score/:id";
 
     public static void main(String[] args) {
 
         final var server = new RouterNanoHTTPD(22800);
         server.addRoute(END_POINT_PATH_SCORE, CreditScoreHandler.class);
+        server.addRoute(END_POINT_PATH_SCORE_BY_ID, ScoringValueHandler.class);
         server.setNotFoundHandler(RouterNanoHTTPD.Error404UriHandler.class);
 
         try {

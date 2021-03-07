@@ -1,5 +1,6 @@
 plugins {
     java
+    `java-library`
 }
 
 group = "org.sandbox"
@@ -18,4 +19,17 @@ dependencies {
     implementation("org.jetbrains", "annotations", "20.1.0")
 
     testImplementation("junit", "junit", "4.12")
+}
+
+tasks {
+    register<Jar>("buildFatJar") {
+        dependsOn(build)
+        manifest {
+            attributes["Main-Class"] = "scoring.ScoringServer"
+        }
+
+        from(configurations.compileClasspath.get().files.map { if (it.isDirectory) it else zipTree(it) })
+        with(jar.get() as CopySpec)
+        archiveBaseName.set("${project.name}-fat")
+    }
 }
